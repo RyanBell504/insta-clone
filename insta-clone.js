@@ -5,12 +5,17 @@
 import { LitElement, html, css } from "lit";
 import { DDDSuper } from "@haxtheweb/d-d-d/d-d-d.js";
 import { I18NMixin } from "@haxtheweb/i18n-manager/lib/I18NMixin.js";
+import "./slide-indicator.js";
+import "./arrow-button.js";
+import "./play-list-slide.js";
+
+
 
 /**
- * `insta-clone`
+ * `play-list-project`
  * 
  * @demo index.html
- * @element insta-clone
+ * @element play-list-project
  */
 export class InstaClone extends DDDSuper(I18NMixin(LitElement)) {
 
@@ -20,25 +25,15 @@ export class InstaClone extends DDDSuper(I18NMixin(LitElement)) {
 
   constructor() {
     super();
-    this.title = "";
-    this.t = this.t || {};
-    this.t = {
-      ...this.t,
-      title: "Title",
-    };
-    this.registerLocalization({
-      context: this,
-      localesPath:
-        new URL("./locales/insta-clone.ar.json", import.meta.url).href +
-        "/../",
-    });
+    this.slides = Array.from(this.querySelectorAll("play-list-slide"));
+    this.index = 0;
   }
 
   // Lit reactive properties
   static get properties() {
     return {
       ...super.properties,
-      title: { type: String },
+      index: { type: Number },
     };
   }
 
@@ -48,36 +43,68 @@ export class InstaClone extends DDDSuper(I18NMixin(LitElement)) {
     css`
       :host {
         display: block;
-        color: var(--ddd-theme-primary);
-        background-color: var(--ddd-theme-accent);
-        font-family: var(--ddd-font-navigation);
+        max-width: 325px;
+        max-height: 1000px;
+        color: var(--ddd-theme-default-potentialMidnight);
+        background-color: var(--ddd-theme-default-slateMaxLight);
+        border-radius: var(--ddd-border-md);
+        font-family: var(--ddd-font-primary);
+        margin: var(--ddd-spacing-4);
+        padding: var(--ddd-spacing-4);
+        box-shadow: var(--ddd-shadow-md); 
       }
       .wrapper {
-        margin: var(--ddd-spacing-2);
-        padding: var(--ddd-spacing-4);
+        position: relative;
       }
-      h3 span {
-        font-size: var(--insta-clone-label-font-size, var(--ddd-font-size-s));
+      .arrow-button {
+        padding: var(--ddd-spacing-30);
       }
     `];
   }
-
+get activeHeading() {
+  const activeSlide = this.slides[this.index];
+  return activeSlide ? activeSlide.topHeading : "Loading...";
+}
   // Lit render the HTML
   render() {
     return html`
-<div class="wrapper">
-  <h3><span>${this.t.title}:</span> ${this.title}</h3>
+<div class="wrapper" @arrow-click="${this._arrowClickHandler}" @dot-click="${this._dotClickHandler}">
   <slot></slot>
-</div>`;
+  <play-list-indicator count="${this.slides.length}" index="${this.index}"></play-list-indicator>
+  <div></div>
+  <arrow-button class="arrow-button"></arrow-button>
+</div>`;}
+
+
+
+  _dotClickHandler(e) {
+    this.index = e.detail.index;
+    this._updateSlides();
+  }
+  _arrowClickHandler(e) {
+    if (e.detail.direction === "left") {
+      this.index = (this.index - 1 + this.slides.length) % this.slides.length;
+    } else {
+      this.index = (this.index + 1) % this.slides.length;
+    }
+    this._updateSlides();
+  }
+
+
+  firstUpdated() {
+    this._updateSlides();
+  }
+
+  _updateSlides() {
+   this.slides.forEach((slide, index) => {
+      slide.style.display = index === this.index ? "block" : "none";
+    });
+
   }
 
   /**
    * haxProperties integration via file reference
    */
-  static get haxProperties() {
-    return new URL(`./lib/${this.tag}.haxProperties.json`, import.meta.url)
-      .href;
-  }
 }
 
 globalThis.customElements.define(InstaClone.tag, InstaClone);
