@@ -10,8 +10,6 @@ import "./arrow-button.js";
 import "./play-list-slide.js";
 
 
-
-
 /**
  * `play-list-project`
  * 

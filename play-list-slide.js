@@ -85,19 +85,17 @@ export class PlayListSlide extends DDDSuper(I18NMixin(LitElement)) {
       `;
   }
     getData() {
-    const indexAtCallTime = this.index
-    fetch("./data.json").then((resp) => {
-    if (resp.ok) {
-      return resp.json();
-    }
-  }).then((data) => {
-    const item = data[indexAtCallTime];
-    this.imageSrc = item.image;
-    this.topHeading = item.name;
-    this.secondHeading = item.author;
-    this.authImgSrc = item.authImg;
-    this.id = item.ID;
-
+     const indexAtCallTime = this.index;
+  fetch("/api/data")  // This is the API endpoint
+    .then((resp) => resp.json())
+    .then((data) => {
+      const item = data[indexAtCallTime];
+      this.imageSrc = item.image;
+      this.topHeading = item.name;
+      this.secondHeading = item.author;
+      this.authImgSrc = item.authImg;
+      this.id = item.ID;
+      this.requestUpdate();
     this.dispatchEvent(new CustomEvent('data-loaded', {
     bubbles: true,
     composed: true,
