@@ -14,7 +14,10 @@ export class PlayListSlide extends DDDSuper(I18NMixin(LitElement)) {
     super();
     this.topHeading = "";
     this.imageSrc = "";
-    this.getFox();
+    this.secondHeading = "";
+    this.authImgSrc = "";
+    this.id = null;
+    this.index = 0;
   }
 
   static get properties() {
@@ -22,6 +25,9 @@ export class PlayListSlide extends DDDSuper(I18NMixin(LitElement)) {
       topHeading : { type: String, attribute: "top-heading" },
       secondHeading : { type    : String, attribute: "second-heading" },
       imageSrc : { type: String, attribute: "image-src" },
+      authImgSrc : { type: String, attribute: "auth-img-src" },
+      index: { type: Number },
+      id: { type: Number },
     };
   }
 
@@ -45,6 +51,17 @@ export class PlayListSlide extends DDDSuper(I18NMixin(LitElement)) {
         object-fit: cover;
         padding: var(--ddd-spacing-3);
       }
+      .author {
+        display: flex;
+        align-items: center;
+      }
+      .author img {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-right: var(--ddd-spacing-2);
+      }
       .line {
         width: 325px;
         height: 2px;
@@ -56,6 +73,10 @@ export class PlayListSlide extends DDDSuper(I18NMixin(LitElement)) {
 
   render() {
     return html`
+      <div class="author">
+        <img src="${this.authImgSrc}" alt="Author Profile Image" loading="lazy"/>
+        <p>${this.secondHeading}</p>
+      </div>
       <h2>${this.topHeading}</h2>
       <div class=line></div>
       <div class="slide">
@@ -63,15 +84,26 @@ export class PlayListSlide extends DDDSuper(I18NMixin(LitElement)) {
       </div>
       `;
   }
-
-    getFox() {
-    fetch("https://randomfox.ca/floof/").then((resp) => {
+    getData() {
+    const indexAtCallTime = this.index
+    fetch("./data.json").then((resp) => {
     if (resp.ok) {
       return resp.json();
     }
   }).then((data) => {
-    this.imageSrc = data.image;
-    this.topHeading = data.image;
+    const item = data[indexAtCallTime];
+    this.imageSrc = item.image;
+    this.topHeading = item.name;
+    this.secondHeading = item.author;
+    this.authImgSrc = item.authImg;
+    this.id = item.ID;
+
+    this.dispatchEvent(new CustomEvent('data-loaded', {
+    bubbles: true,
+    composed: true,
+    detail: {id: this.id}
+  })
+ )
   });
   }
 }

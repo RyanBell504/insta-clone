@@ -11,6 +11,7 @@ import "./play-list-slide.js";
 
 
 
+
 /**
  * `play-list-project`
  * 
@@ -25,8 +26,11 @@ export class InstaClone extends DDDSuper(I18NMixin(LitElement)) {
 
   constructor() {
     super();
-    this.slides = Array.from(this.querySelectorAll("play-list-slide"));
     this.index = 0;
+    this.likes = {};
+    this.userVotes = {};
+    this.slides = Array.from(this.querySelectorAll("play-list-slide"));
+    this.loadFromStorage();
   }
 
   // Lit reactive properties
@@ -34,6 +38,9 @@ export class InstaClone extends DDDSuper(I18NMixin(LitElement)) {
     return {
       ...super.properties,
       index: { type: Number },
+      likes: { type: Object },
+      userVotes: { type: Object },
+      slides : {type: Array}
     };
   }
 
@@ -61,22 +68,49 @@ export class InstaClone extends DDDSuper(I18NMixin(LitElement)) {
       }
     `];
   }
-get activeHeading() {
-  const activeSlide = this.slides[this.index];
-  return activeSlide ? activeSlide.topHeading : "Loading...";
-}
+
   // Lit render the HTML
   render() {
+   const activeSlide = this.slides[this.index];
+   const slideId = activeSlide ? activeSlide.id : null;
+
+   const count = (slideId !== null) ? (this.likes[slideId] || 0) : 0;
+   const isLiked = (slideId !== null) ? (this.userVotes[slideId] === 'like') : false;
+
     return html`
-<div class="wrapper" @arrow-click="${this._arrowClickHandler}" @dot-click="${this._dotClickHandler}">
+<div class="wrapper" @arrow-click="${this._arrowClickHandler}" @dot-click="${this._dotClickHandler}" @data-loaded="${() => this.requestUpdate()}">
   <slot></slot>
   <play-list-indicator count="${this.slides.length}" index="${this.index}"></play-list-indicator>
   <div></div>
   <arrow-button class="arrow-button"></arrow-button>
+  <button class="like-button" @click="${() => this._vote(slideId)}">${isLiked ? '❤️' : '♡'} ${count}</button>
 </div>`;}
 
 
+_vote(id) {
+    if (this.userVotes[id] === "like") {
+      this.likes[id] = Math.max(0, (this.likes[id] || 1) - 1);
+      delete this.userVotes[id];
+    } else {
+      this.likes[id] = (this.likes[id] || 0) + 1;
+      this.userVotes[id] = "like";
+    }
+ 
+    this.saveToStorage();
+    this.requestUpdate();
+  }
+  saveToStorage() {
+    localStorage.setItem("insta-likes", JSON.stringify(this.likes));
+    localStorage.setItem("insta-votes", JSON.stringify(this.userVotes));
+  }
 
+  loadFromStorage() {
+    const savedLikes = localStorage.getItem("insta-likes");
+    const savedVotes = localStorage.getItem("insta-votes");
+
+    if(savedLikes) this.likes = JSON.parse(savedLikes);
+    if(savedVotes) this.userVotes = JSON.parse(savedVotes);
+  }
   _dotClickHandler(e) {
     this.index = e.detail.index;
     this._updateSlides();
@@ -92,19 +126,26 @@ get activeHeading() {
 
 
   firstUpdated() {
-    this._updateSlides();
+      const page = new URLSearchParams(window.location.search).get('page');
+      this.index = page ? parseInt(page, 10) : 0;
+      this._updateSlides();
   }
 
   _updateSlides() {
    this.slides.forEach((slide, index) => {
       slide.style.display = index === this.index ? "block" : "none";
+      slide.index = index;
+      slide.getData();
     });
-
+      const currentURL = new URL(window.location.href);
+      currentURL.searchParams.set('page', this.index);
+      window.history.pushState(null, '', currentURL.toString());
+      this.requestUpdate();
   }
-
+}
   /**
    * haxProperties integration via file reference
    */
-}
+
 
 globalThis.customElements.define(InstaClone.tag, InstaClone);
