@@ -1,23 +1,7 @@
 <!doctype html>
 <html lang="en">
 
-<insta-clone index="0">
-  <play-list-slide index="0"></play-list-slide>
-  <play-list-slide index="1"></play-list-slide>
-  <play-list-slide index="2"></play-list-slide>
-  <play-list-slide index="3"></play-list-slide>
-  <play-list-slide index="4"></play-list-slide>
-  <play-list-slide index="5"></play-list-slide>
-  <play-list-slide index="6"></play-list-slide>
-  <play-list-slide index="7"></play-list-slide>
-  <play-list-slide index="8"></play-list-slide>
-  <play-list-slide index="9"></play-list-slide>
-  <play-list-slide index="10"></play-list-slide>
-  <play-list-slide index="11"></play-list-slide>
-  <play-list-slide index="12"></play-list-slide>
-  <play-list-slide index="13"></play-list-slide>
-  <play-list-slide index="14"></play-list-slide>
-</insta-clone>
+
 
 
 <head>
@@ -29,29 +13,30 @@
   <style>
     :root, html, body {
       margin: var(--ddd-spacing-0);
-      padding: var(--ddd-spacing-0);
+      padding: var(--ddd-spacing-4);
+      color-scheme: light dark;
+      insta-clone:not(:defined){
+      visibility: hidden;
+      }
     }
     #demo {
       margin: var(--ddd-spacing-2);
     }
     insta-clone {
-      margin: var(--ddd-spacing-2);
       border: var(--ddd-border-md);
       border-radius: var(--ddd-radius-lg);
+
     }
     insta-clone:hover {
       box-shadow: var(--ddd-boxShadow-sm);
-    }
-    #example {
-      --insta-clone-font-size: var(--ddd-font-size-l);
-      background-color: var(--ddd-accent-2);
-      color: var(--ddd-primary-17);
     }
   </style>
   <title>insta-clone</title>
 </head>
 
 <body>
+
+  <insta-clone></insta-clone>
 
   <script type="module" src="./insta-clone.js"></script>
 </body>

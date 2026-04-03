@@ -8,6 +8,7 @@ import { I18NMixin } from "@haxtheweb/i18n-manager/lib/I18NMixin.js";
 import "./slide-indicator.js";
 import "./arrow-button.js";
 import "./play-list-slide.js";
+import "./thumbnailpreview.js";
 
 
 /**
@@ -27,7 +28,7 @@ export class InstaClone extends DDDSuper(I18NMixin(LitElement)) {
     this.index = 0;
     this.likes = {};
     this.userVotes = {};
-    this.slides = Array.from(this.querySelectorAll("play-list-slide"));
+    this.data = [];
     this.loadFromStorage();
   }
 
@@ -38,7 +39,7 @@ export class InstaClone extends DDDSuper(I18NMixin(LitElement)) {
       index: { type: Number },
       likes: { type: Object },
       userVotes: { type: Object },
-      slides : {type: Array}
+      data : {type: Array}
     };
   }
 
@@ -48,41 +49,71 @@ export class InstaClone extends DDDSuper(I18NMixin(LitElement)) {
     css`
       :host {
         display: block;
+        width: 90%;
         max-width: 325px;
-        max-height: 1000px;
-        color: var(--ddd-theme-default-potentialMidnight);
-        background-color: var(--ddd-theme-default-slateMaxLight);
+        height: auto;
+        background-color: light-dark(var(--ddd-theme-default-slateMaxLight), black);        
         border-radius: var(--ddd-border-md);
         font-family: var(--ddd-font-primary);
-        margin: var(--ddd-spacing-4);
-        padding: var(--ddd-spacing-4);
+        margin: var(--ddd-spacing-1);
+        padding: var(--ddd-spacing-1);
         box-shadow: var(--ddd-shadow-md); 
       }
       .wrapper {
         position: relative;
       }
-      .arrow-button {
-        padding: var(--ddd-spacing-30);
+      .loading {
+      width: 100%;
+      aspect-ratio: 1 / 2;
+      background-color: light-dark(var(--ddd-theme-default-slateMaxLight), black);
+      }
+      .interaction button {
+        margin-top: var(--ddd-spacing-3);
+        width: 50px;
+        height: 30px;
+        background-color: light-dark(var(--ddd-theme-default-slateMaxLight), black);
+        border: none;
+      }
+      .interaction button:hover {
+        opacity: 0.8;
+        cursor: pointer;
       }
     `];
   }
 
   // Lit render the HTML
   render() {
-   const activeSlide = this.slides[this.index];
-   const slideId = activeSlide ? activeSlide.id : null;
+    const item = this.data[this.index];
+    if (!item) return html`<div class="loading"></div>`
 
-   const count = (slideId !== null) ? (this.likes[slideId] || 0) : 0;
-   const isLiked = (slideId !== null) ? (this.userVotes[slideId] === 'like') : false;
+   const count = (this.likes[item.ID] || 0);
+   const isLiked =  (this.userVotes[item.ID] === 'like');
+
+   const prevIndex = (this.index - 1 + this.data.length) % this.data.length;
+   const nextIndex = (this.index + 1) % this.data.length;
 
     return html`
-<div class="wrapper" @arrow-click="${this._arrowClickHandler}" @dot-click="${this._dotClickHandler}" @data-loaded="${() => this.requestUpdate()}">
-  <slot></slot>
-  <play-list-indicator count="${this.slides.length}" index="${this.index}"></play-list-indicator>
-  <div></div>
+<div class="wrapper" @arrow-click="${this._arrowClickHandler}" @dot-click="${this._dotClickHandler}">
+  <play-list-slide 
+        top-heading="${item.name}"
+        second-heading="${item.author}"
+        image-src="${item.image}"
+        auth-img-src="${item.authImg}"
+        .id="${item.ID}">
+    </play-list-slide>
+  <play-list-indicator count="${this.data.length}" index="${this.index}"></play-list-indicator>
+    <thumbnail-preview
+        prev-image="${this.data[prevIndex].image}"
+        current-image="${item.image}"
+        next-image="${this.data[nextIndex].image}"
+        @thumbnail-click="${this._thumbnailClickHandler}">
+  </thumbnail-preview>
   <arrow-button class="arrow-button"></arrow-button>
-  <button class="like-button" @click="${() => this._vote(slideId)}">${isLiked ? '❤️' : '♡'} ${count}</button>
-</div>`;}
+</div>
+<div class="interaction"> 
+      <button class="like-button" @click="${() => this._vote(item.ID)}">${isLiked ? '❤️' : '♡'} ${count}</button>
+      <button class="share-btn" @click="${() => this._copyShareLink(item.ID)}">Share</button>
+  </div>`;}
 
 
 _vote(id) {
@@ -115,30 +146,44 @@ _vote(id) {
   }
   _arrowClickHandler(e) {
     if (e.detail.direction === "left") {
-      this.index = (this.index - 1 + this.slides.length) % this.slides.length;
+      this.index = (this.index - 1 + this.data.length) % this.data.length;
     } else {
-      this.index = (this.index + 1) % this.slides.length;
+      this.index = (this.index + 1) % this.data.length;
     }
     this._updateSlides();
   }
 
-
+_thumbnailClickHandler(e){
+    this.index = e.detail.direction === "left"
+    ? (this.index - 1 + this.data.length) % this.data.length
+    : (this.index + 1) % this.data.length;
+    this._updateSlides();
+}
   firstUpdated() {
       const page = new URLSearchParams(window.location.search).get('page');
       this.index = page ? parseInt(page, 10) : 0;
-      this._updateSlides();
+      fetch("/api/data.js") //     /api/data.js for vercel , ./data.json for npm
+      .then(r => r.json())
+      .then(data => {
+        this.data = data;
+        this._updateSlides();
+      })
   }
 
   _updateSlides() {
-   this.slides.forEach((slide, index) => {
-      slide.style.display = index === this.index ? "block" : "none";
-      slide.index = index;
-      slide.getData();
-    });
       const currentURL = new URL(window.location.href);
       currentURL.searchParams.set('page', this.index);
       window.history.pushState(null, '', currentURL.toString());
       this.requestUpdate();
+  }
+   _copyShareLink(id) {
+    const url = `${window.location.origin}${window.location.pathname}?page=${id}`;
+    try {
+      navigator.clipboard.writeText(url);
+      alert("Link copied!");
+    } catch (err) {
+      console.error("Clipboard copy failed", err);
+    }
   }
 }
   /**

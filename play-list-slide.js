@@ -40,20 +40,28 @@ export class PlayListSlide extends DDDSuper(I18NMixin(LitElement)) {
       h2 {
         font-size: var(--ddd-font-size-4xs);
         letter-spacing: var(--ddd-ls-72-sm);
-        text-transform: uppercase;
         color: var(--ddd-theme-default-link);
         font-weight: var(--play-list-slide-top-heading-font-weight, var(--ddd-font-weight-bold));
+        margin-left: var(--ddd-spacing-3);
         }
+      .slide{
+        width: 100%;
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+      }
       .slide img{
-        width: 300px;
-        height: 400px;
-        aspect-ratio: 1 / 2;
+        width: 100%;
+        max-height: 400px;
+        aspect-ratio: 1 / 1;
         object-fit: cover;
         padding: var(--ddd-spacing-3);
+        box-sizing: border-box;
       }
       .author {
         display: flex;
         align-items: center;
+        margin-left: var(--ddd-spacing-3);
       }
       .author img {
         width: 32px;
@@ -63,7 +71,7 @@ export class PlayListSlide extends DDDSuper(I18NMixin(LitElement)) {
         margin-right: var(--ddd-spacing-2);
       }
       .line {
-        width: 325px;
+        width: 100%;
         height: 2px;
         background-color: var(--ddd-theme-default-skyBlue);
         margin: 16px 0 24px 0;  
@@ -77,35 +85,14 @@ export class PlayListSlide extends DDDSuper(I18NMixin(LitElement)) {
         <img src="${this.authImgSrc}" alt="Author Profile Image" loading="lazy"/>
         <p>${this.secondHeading}</p>
       </div>
-      <h2>${this.topHeading}</h2>
-      <div class=line></div>
       <div class="slide">
         <img src="${this.imageSrc}" alt="Slide Image" loading="lazy"/>
       </div>
+       <div class=line></div>
+      <h2>${this.topHeading}</h2>
       `;
   }
-    getData() {
-     const indexAtCallTime = this.index;
-     fetch("/api/data")
-    .then((resp) => resp.json())
-    .then((data) => {
-      const item = data[indexAtCallTime];
-      this.imageSrc = item.image;
-      this.topHeading = item.name;
-      this.secondHeading = item.author;
-      this.authImgSrc = item.authImg;
-      this.id = item.ID;
-      
-      this.requestUpdate();
 
-    this.dispatchEvent(new CustomEvent('data-loaded', {
-    bubbles: true,
-    composed: true,
-    detail: {id: this.id}
-  })
- )
-  });
-  }
 }
 
 globalThis.customElements.define(PlayListSlide.tag, PlayListSlide);

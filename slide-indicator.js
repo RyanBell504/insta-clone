@@ -27,21 +27,25 @@ export class SlideIndicator extends DDDSuper(I18NMixin(LitElement)) {
         return [super.styles,
         css`
         :host {
-            display: inline-block;
-            padding: var(--ddd-spacing-2);
+            display: block;
+            width: 100%;
+            box-sizing: border-box;
+            padding: var(--ddd-spacing-4) 0;
             color: var(--ddd-theme-primary);
         }
         .dots {
             display: flex;
-            justify-content: flex-start;
+            justify-content: center;
             gap: var(--ddd-spacing-2);
             margin-top: var(--ddd-spacing-2);
+            overflow-x: auto;
+            scrollbar-width: none; 
         }
         button{
             width: 12px;
             height: 12px;
             border-radius: 50%;
-            background-color: light-grey;
+            background-color: var(--ddd-theme-default-limestoneGray);
             border: none;
             cursor: pointer;
         }
@@ -49,7 +53,8 @@ export class SlideIndicator extends DDDSuper(I18NMixin(LitElement)) {
             background-color: var(--ddd-theme-default-skyBlue);
         }
         button:hover {
-            background-color: var(--ddd-theme-default-limestoneGray);
+            background-color: var(--ddd-theme-default-skyBlue);
+            opacity: 0.8;
         }
         `];
     }
